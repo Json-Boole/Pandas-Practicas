@@ -36,33 +36,11 @@ class UserSerializer(serializers.ModelSerializer):
 
 class LogoutSerializer(serializers.Serializer):
     user = serializers.IntegerField()
-
-""" class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['email'] = user.email
-        return token
- """
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    username_field = 'email'
-
     def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
-
-        if email and password:
-            user = authenticate(email=email, password=password)
-
-            if not user:
-                raise serializers.ValidationError('Correo o contraseña incorrectos')
-        else:
-            raise serializers.ValidationError('Faltan campos requeridos')
-
         data = super().validate(attrs)
-        data['email'] = user.email
+        data['userId'] = self.user.id  # Agrega el ID del usuario a la respuesta
         return data
-    
 class RoleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Role

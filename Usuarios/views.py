@@ -51,23 +51,19 @@ class Login(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
-        email = request.data.get('email', '')
-        password = request.data.get('password', '')
-        user = authenticate(email=email, password=password)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
-        if user:
-            login_serializer = self.serializer_class(data=request.data)
-            if login_serializer.is_valid():
-                user_serializer = UserSerializer(user)
-                return Response({
-                    'token': login_serializer.validated_data['access'],
-                    'refresh-token': login_serializer.validated_data['refresh'],
-                    'user': user_serializer.data,
-                    'message': 'Inicio de Sesión Exitoso'
-                }, status=status.HTTP_200_OK)
-            return Response({'error': 'Contraseña o nombre de usuario incorrectos'}, status=status.HTTP_400_BAD_REQUEST)
-        return Response({'error': 'Contraseña o nombre de usuario incorrectos'}, status=status.HTTP_400_BAD_REQUEST)
+        user = serializer.user
+        user_serializer = UserSerializer(user)
 
+        return Response({
+            'access': serializer.validated_data['access'],
+            'refresh': serializer.validated_data['refresh'],
+            'userId': user.id,
+            'user': user_serializer.data,
+            'message': 'Inicio de Sesión Exitoso'
+        }, status=status.HTTP_200_OK)
 class Logout(GenericAPIView):
     permission_classes = [IsAuthenticated]
     serializer_class = LogoutSerializer
